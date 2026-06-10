@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agendar Call · Seller Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & Base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #f5f4f0;
+  --surface:  #ffffff;
+  --border:   #e3e1d9;
+  --border2:  #ccc9be;
+  --ink:      #111110;
+  --muted:    #8a887f;
+  --c-blue:   #1a6aff;
+  --c-blue-s: #ddeaff;
+  --c-ora:    #d95400;
+  --c-ora-s:  #fde3d0;
+  --c-ok:     #1a7a4a;
+  --c-ok-s:   #d3f0e3;
+  --c-err:    #c0392b;
+  --c-err-s:  #fde8e6;
+  --radius:   10px;
+  --radius-s: 6px;
+  --shadow:   0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.04);
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+  padding: 40px 16px 80px;
+}
+
+/* ── Layout ── */
+.wrap { max-width: 520px; margin: 0 auto; }
+
+.brand {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 36px;
+}
+.brand-dot {
+  width: 28px; height: 28px; border-radius: 7px;
+  background: var(--ink); display: flex; align-items: center;
+  justify-content: center;
+}
+.brand-dot svg { width: 14px; height: 14px; fill: #fff; }
+.brand-name { font-weight: 700; font-size: 15px; letter-spacing: -.2px; }
+.brand-sub  { font-size: 12px; color: var(--muted); margin-top: -2px; }
+
+/* ── Steps ── */
+.step { margin-bottom: 28px; }
+.step-head {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 12px;
+}
+.step-num {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--ink); color: #fff;
+  font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.step-num.done { background: var(--c-ok); }
+.step-title { font-weight: 600; font-size: 13px; }
+
+/* ── Type buttons ── */
+.type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.type-btn {
+  padding: 14px 16px; border-radius: var(--radius);
+  border: 1.5px solid var(--border);
+  background: var(--surface); cursor: pointer;
+  text-align: left; transition: all .15s;
+  box-shadow: var(--shadow);
+}
+.type-btn:hover { border-color: var(--border2); }
+.type-btn.sel-c { border-color: var(--c-blue); background: var(--c-blue-s); }
+.type-btn.sel-m { border-color: var(--c-ora);  background: var(--c-ora-s); }
+.type-btn .t-icon { font-size: 20px; margin-bottom: 6px; }
+.type-btn .t-name { font-weight: 600; font-size: 14px; }
+.type-btn .t-info { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.type-btn.sel-c .t-name { color: var(--c-blue); }
+.type-btn.sel-m .t-name { color: var(--c-ora); }
+
+/* ── Calendar ── */
+.cal-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px;
+  box-shadow: var(--shadow);
+}
+.cal-nav {
+  display: flex; align-items: center;
+  justify-content: space-between; margin-bottom: 14px;
+}
+.cal-month { font-weight: 600; font-size: 14px; }
+.cal-arrow {
+  width: 30px; height: 30px; border-radius: var(--radius-s);
+  border: 1px solid var(--border); background: none;
+  cursor: pointer; font-size: 15px; color: var(--ink);
+  display: flex; align-items: center; justify-content: center;
+  transition: background .12s;
+}
+.cal-arrow:hover { background: var(--bg); }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.cal-dh {
+  text-align: center; font-size: 10px; font-weight: 600;
+  color: var(--muted); padding: 4px 0; text-transform: uppercase; letter-spacing: .4px;
+}
+.cal-cell {
+  aspect-ratio: 1; display: flex; align-items: center;
+  justify-content: center; border-radius: var(--radius-s);
+  font-size: 13px; cursor: default; color: var(--muted);
+  position: relative; transition: all .12s;
+}
+.cal-cell.avail {
+  cursor: pointer; color: var(--ink);
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.cal-cell.avail:hover { border-color: var(--border2); background: var(--bg); }
+.cal-cell.avail-c { border-color: #a0c0ff !important; }
+.cal-cell.avail-m { border-color: #f0b090 !important; }
+.cal-cell.avail-c:hover { background: var(--c-blue-s) !important; }
+.cal-cell.avail-m:hover { background: var(--c-ora-s)  !important; }
+.cal-cell.sel-c { background: var(--c-blue) !important; color: #fff !important; border-color: var(--c-blue) !important; font-weight: 600; }
+.cal-cell.sel-m { background: var(--c-ora)  !important; color: #fff !important; border-color: var(--c-ora)  !important; font-weight: 600; }
+.cal-cell.past  { opacity: .3; }
+.cal-cell.other { opacity: 0; pointer-events: none; }
+.cal-cell.full  { opacity: .4; cursor: not-allowed; }
+.today-pip::after {
+  content: ''; width: 4px; height: 4px; border-radius: 50%;
+  background: currentColor; position: absolute; bottom: 4px;
+  left: 50%; transform: translateX(-50%);
+}
+.loading-cal {
+  text-align: center; padding: 28px 0;
+  color: var(--muted); font-size: 13px;
+}
+.spinner {
+  display: inline-block; width: 18px; height: 18px;
+  border: 2px solid var(--border); border-top-color: var(--c-blue);
+  border-radius: 50%; animation: spin .7s linear infinite;
+  vertical-align: middle; margin-right: 6px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Slots ── */
+.slots-wrap { margin-top: 10px; }
+.day-label { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+.slots-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 6px; }
+.slot-btn {
+  padding: 9px 4px; border-radius: var(--radius-s);
+  border: 1px solid var(--border); background: var(--surface);
+  cursor: pointer; font-size: 12px; font-weight: 500;
+  text-align: center; transition: all .12s;
+  font-family: 'JetBrains Mono', monospace; color: var(--ink);
+}
+.slot-btn:hover { border-color: var(--border2); background: var(--bg); }
+.slot-btn.sel-c { background: var(--c-blue); color: #fff; border-color: var(--c-blue); }
+.slot-btn.sel-m { background: var(--c-ora);  color: #fff; border-color: var(--c-ora); }
+.slot-btn.ocupado { opacity: .3; cursor: not-allowed; text-decoration: line-through; }
+
+/* ── Form fields ── */
+.field { margin-bottom: 12px; }
+.field label { display: block; font-size: 12px; font-weight: 500; color: var(--muted); margin-bottom: 5px; }
+.field input {
+  width: 100%; padding: 10px 13px; border-radius: var(--radius-s);
+  border: 1px solid var(--border); background: var(--surface);
+  font-size: 14px; font-family: 'Inter', sans-serif; color: var(--ink);
+  outline: none; transition: border-color .12s;
+}
+.field input:focus { border-color: var(--c-blue); box-shadow: 0 0 0 3px rgba(26,106,255,.1); }
+
+/* ── Summary card ── */
+.summary {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow);
+  margin-bottom: 14px;
+}
+.summary-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 6px 0; font-size: 13px;
+}
+.summary-row + .summary-row { border-top: 1px solid var(--border); }
+.s-key  { color: var(--muted); }
+.s-val  { font-weight: 600; }
+.s-c    { color: var(--c-blue); }
+.s-m    { color: var(--c-ora); }
+.s-badge {
+  font-size: 11px; padding: 3px 9px; border-radius: 100px; font-weight: 600;
+}
+.s-badge-c { background: var(--c-blue-s); color: var(--c-blue); }
+.s-badge-m { background: var(--c-ora-s);  color: var(--c-ora); }
+
+/* ── CTA button ── */
+.cta {
+  width: 100%; padding: 14px; border-radius: var(--radius);
+  border: none; font-size: 15px; font-weight: 600;
+  cursor: pointer; display: flex; align-items: center;
+  justify-content: center; gap: 8px; transition: opacity .15s, transform .1s;
+  color: #fff; letter-spacing: -.1px;
+}
+.cta:hover:not(:disabled) { opacity: .88; }
+.cta:active:not(:disabled) { transform: scale(.98); }
+.cta:disabled { opacity: .45; cursor: not-allowed; }
+.cta-c { background: var(--c-blue); }
+.cta-m { background: var(--c-ora);  }
+
+/* ── Feedback ── */
+.feedback {
+  border-radius: var(--radius); padding: 14px 16px;
+  font-size: 13px; line-height: 1.6; margin-top: 14px;
+  display: none;
+}
+.feedback.ok  { background: var(--c-ok-s);  border: 1px solid #9de0bc; color: #0f5c35; display: block; }
+.feedback.err { background: var(--c-err-s); border: 1px solid #f5b0aa; color: #8b2218; display: block; }
+.feedback strong { font-weight: 700; }
+
+/* ── Utils ── */
+.hidden   { display: none !important; }
+.divider  { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+.txt-link {
+  font-size: 12px; color: var(--muted); cursor: pointer;
+  text-decoration: underline; text-underline-offset: 2px;
+  background: none; border: none; padding: 0;
+}
+.txt-link:hover { color: var(--ink); }
+.step-row { display: flex; justify-content: space-between; align-items: center; }
+
+/* ── Config notice ── */
+.config-notice {
+  background: #fffbea; border: 1px solid #f0d070;
+  border-radius: var(--radius-s); padding: 10px 14px;
+  font-size: 12px; color: #7a5c00; margin-bottom: 24px; line-height: 1.6;
+}
+.config-notice strong { font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Brand -->
+  <div class="brand">
+    <div class="brand-dot">
+      <svg viewBox="0 0 16 16"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+    </div>
+    <div>
+      <div class="brand-name">Seller Pro</div>
+      <div class="brand-sub">Agendamento de calls</div>
+    </div>
+  </div>
+
+  <!-- Config notice (remover após configurar a URL) -->
+  <div class="config-notice" id="config-notice">
+    <strong>⚙️ Configuração pendente:</strong> substitua <code>SUA_URL_AQUI</code> no script abaixo pela URL do seu Apps Script Web App.
+  </div>
+
+  <!-- Step 1: Tipo -->
+  <div class="step" id="step1">
+    <div class="step-head">
+      <div class="step-num" id="num1">1</div>
+      <span class="step-title">Tipo de serviço</span>
+    </div>
+    <div class="type-grid">
+      <button class="type-btn" id="btn-c" onclick="selectTipo('consultoria')">
+        <div class="t-icon">📊</div>
+        <div class="t-name">Consultoria</div>
+        <div class="t-info">1 hora · Seg, Qua, Qui</div>
+      </button>
+      <button class="type-btn" id="btn-m" onclick="selectTipo('mentoria')">
+        <div class="t-icon">🎯</div>
+        <div class="t-name">Mentoria ME</div>
+        <div class="t-info">1h30 · Terça, Qui</div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Step 2: Calendário -->
+  <div class="step hidden" id="step2">
+    <div class="step-head step-row">
+      <div style="display:flex;gap:8px;align-items:center">
+        <div class="step-num" id="num2">2</div>
+        <span class="step-title">Escolha o dia</span>
+      </div>
+      <button class="txt-link" onclick="voltarStep(1)">trocar serviço</button>
+    </div>
+    <div class="cal-card">
+      <div class="cal-nav">
+        <button class="cal-arrow" onclick="navMes(-1)">‹</button>
+        <span class="cal-month" id="cal-month-label"></span>
+        <button class="cal-arrow" onclick="navMes(1)">›</button>
+      </div>
+      <div id="cal-content">
+        <div class="loading-cal"><span class="spinner"></span>Carregando disponibilidade…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 3: Horário -->
+  <div class="step hidden" id="step3">
+    <div class="step-head step-row">
+      <div style="display:flex;gap:8px;align-items:center">
+        <div class="step-num" id="num3">3</div>
+        <span class="step-title">Horário</span>
+      </div>
+      <button class="txt-link" onclick="voltarStep(2)">trocar dia</button>
+    </div>
+    <div class="slots-wrap">
+      <div class="day-label" id="day-label-text"></div>
+      <div class="slots-grid" id="slots-grid"></div>
+    </div>
+  </div>
+
+  <!-- Step 4: Dados -->
+  <div class="step hidden" id="step4">
+    <div class="step-head step-row">
+      <div style="display:flex;gap:8px;align-items:center">
+        <div class="step-num" id="num4">4</div>
+        <span class="step-title">Seus dados</span>
+      </div>
+      <button class="txt-link" onclick="voltarStep(3)">trocar horário</button>
+    </div>
+    <div class="field">
+      <label>Nome completo *</label>
+      <input type="text" id="input-nome" placeholder="Ex: João Silva" oninput="atualizarResumo()"/>
+    </div>
+    <div class="field">
+      <label>E-mail (opcional — recebe convite)</label>
+      <input type="email" id="input-email" placeholder="joao@empresa.com.br" oninput="atualizarResumo()"/>
+    </div>
+  </div>
+
+  <!-- Step 5: Confirmação -->
+  <div class="step hidden" id="step5">
+    <div class="step-head">
+      <div class="step-num" id="num5">5</div>
+      <span class="step-title">Confirmar</span>
+    </div>
+    <div class="summary" id="resumo"></div>
+    <button class="cta" id="btn-confirmar" onclick="confirmar()" disabled>
+      <span id="btn-texto">Confirmar agendamento</span>
+    </button>
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+</div>
+
+<script>
+// ── CONFIGURAÇÃO ───────────────────────────────────────────────
+// Substitua pela URL do seu Apps Script Web App após o deploy
+const APPS_SCRIPT_URL = "SUA_URL_AQUI";
+// ──────────────────────────────────────────────────────────────
+
+const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+               "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+const DIAS_PT = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+const DIAS_FULL = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira",
+                   "Quinta-feira","Sexta-feira","Sábado"];
+
+const S = {
+  tipo: null, ano: null, mes: null,
+  dia: null, slot: null,
+  disponibilidade: null,
+  loading: false
+};
+
+const now = new Date();
+S.ano = now.getFullYear();
+S.mes = now.getMonth(); // 0-indexed
+
+// ── STEP 1: Tipo ────────────────────────────────────────────────
+function selectTipo(t) {
+  S.tipo = t;
+  S.dia = null; S.slot = null; S.disponibilidade = null;
+  document.getElementById("btn-c").className = "type-btn" + (t==="consultoria" ? " sel-c" : "");
+  document.getElementById("btn-m").className = "type-btn" + (t==="mentoria"    ? " sel-m" : "");
+  document.getElementById("num1").className = "step-num done";
+  mostrarStep(2);
+  carregarDisponibilidade();
+}
+
+// ── STEP 2: Calendário ─────────────────────────────────────────
+function navMes(d) {
+  S.mes += d;
+  if (S.mes > 11) { S.mes = 0; S.ano++; }
+  if (S.mes < 0)  { S.mes = 11; S.ano--; }
+  S.dia = null; S.slot = null;
+  esconderStep(3); esconderStep(4); esconderStep(5);
+  carregarDisponibilidade();
+}
+
+function carregarDisponibilidade() {
+  const label = document.getElementById("cal-month-label");
+  label.textContent = MESES[S.mes] + " " + S.ano;
+  document.getElementById("cal-content").innerHTML =
+    '<div class="loading-cal"><span class="spinner"></span>Carregando disponibilidade…</div>';
+
+  // Se URL não configurada, usa modo offline com regras locais
+  if (APPS_SCRIPT_URL === "SUA_URL_AQUI") {
+    setTimeout(() => renderCalLocal(), 400);
+    return;
+  }
+
+  const url = `${APPS_SCRIPT_URL}?action=disponibilidade&tipo=${S.tipo}&ano=${S.ano}&mes=${S.mes + 1}`;
+  fetch(url)
+    .then(r => r.json())
+    .then(data => {
+      if (data.ok) {
+        S.disponibilidade = data.disponibilidade;
+        renderCal(data.disponibilidade);
+      } else {
+        document.getElementById("cal-content").innerHTML =
+          `<div class="loading-cal" style="color:#c0392b">Erro: ${data.erro}</div>`;
+      }
+    })
+    .catch(() => {
+      document.getElementById("cal-content").innerHTML =
+        '<div class="loading-cal" style="color:#c0392b">Sem conexão com o servidor. Verifique a URL configurada.</div>';
+    });
+}
+
+// Modo local (sem Apps Script) — usa regras hardcoded
+function renderCalLocal() {
+  const diasPermitidos = S.tipo === "consultoria" ? [1,3,4] : [2,4];
+  const slots = S.tipo === "consultoria"
+    ? ["09:00","10:00","11:00","13:00","14:00","15:00"]
+    : ["09:30","11:00","13:30"];
+  const disp = {};
+  const totalDias = new Date(S.ano, S.mes + 1, 0).getDate();
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  for (let d = 1; d <= totalDias; d++) {
+    const dt = new Date(S.ano, S.mes, d);
+    if (!diasPermitidos.includes(dt.getDay())) continue;
+    if (dt < hoje) continue;
+    const key = fmtDate(dt);
+    const slotObj = {};
+    slots.forEach(s => slotObj[s] = true);
+    disp[key] = { slots: slotObj, cheio: false };
+  }
+  S.disponibilidade = disp;
+  renderCal(disp);
+}
+
+function renderCal(disp) {
+  const ac = S.tipo === "consultoria" ? "c" : "m";
+  const primeiro = new Date(S.ano, S.mes, 1);
+  const ultimo   = new Date(S.ano, S.mes + 1, 0);
+  const startDow = primeiro.getDay();
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const hojeStr = fmtDate(hoje);
+
+  let html = '<div class="cal-grid">';
+  DIAS_PT.forEach(d => { html += `<div class="cal-dh">${d}</div>`; });
+
+  // Células vazias antes do dia 1
+  for (let i = 0; i < startDow; i++) {
+    html += `<div class="cal-cell other"></div>`;
+  }
+
+  for (let d = 1; d <= ultimo.getDate(); d++) {
+    const dt = new Date(S.ano, S.mes, d);
+    const key = fmtDate(dt);
+    const info = disp[key];
+    const isPast = dt < hoje;
+    const isToday = key === hojeStr;
+    const isSel = S.dia === d;
+    const slotCount = info ? Object.values(info.slots).filter(Boolean).length : 0;
+
+    let cls = "cal-cell";
+    let onclick = "";
+    if (isPast || !info) {
+      cls += " past";
+    } else if (info.cheio || slotCount === 0) {
+      cls += " full"; title = "Dia cheio";
+    } else {
+      cls += ` avail avail-${ac}`;
+      onclick = `onclick="selecionarDia(${d})"`;
+    }
+    if (isToday) cls += " today-pip";
+    if (isSel) cls += ` sel-${ac}`;
+    html += `<div class="${cls}" ${onclick}>${d}</div>`;
+  }
+
+  const restantes = (7 - (startDow + ultimo.getDate()) % 7) % 7;
+  for (let i = 0; i < restantes; i++) {
+    html += `<div class="cal-cell other"></div>`;
+  }
+  html += '</div>';
+  document.getElementById("cal-content").innerHTML = html;
+}
+
+function selecionarDia(d) {
+  S.dia = d; S.slot = null;
+  renderCal(S.disponibilidade);
+
+  const dt = new Date(S.ano, S.mes, d);
+  const key = fmtDate(dt);
+  const info = S.disponibilidade[key];
+  document.getElementById("num2").className = "step-num done";
+
+  const dayFull = DIAS_FULL[dt.getDay()] + ", " + d + " de " + MESES[S.mes];
+  document.getElementById("day-label-text").textContent = dayFull;
+
+  const ac = S.tipo === "consultoria" ? "c" : "m";
+  let html = "";
+  Object.entries(info.slots).forEach(([slot, livre]) => {
+    const cls = livre ? "slot-btn" : "slot-btn ocupado";
+    const click = livre ? `onclick="selecionarSlot('${slot}')"` : "";
+    html += `<button class="${cls}" ${click}>${slot}</button>`;
+  });
+  document.getElementById("slots-grid").innerHTML = html;
+  mostrarStep(3);
+  setTimeout(() => document.getElementById("step3").scrollIntoView({behavior:"smooth", block:"nearest"}), 100);
+}
+
+// ── STEP 3: Slot ───────────────────────────────────────────────
+function selecionarSlot(slot) {
+  S.slot = slot;
+  const ac = S.tipo === "consultoria" ? "c" : "m";
+  document.querySelectorAll(".slot-btn:not(.ocupado)").forEach(b => {
+    b.className = "slot-btn" + (b.textContent.trim() === slot ? ` sel-${ac}` : "");
+  });
+  document.getElementById("num3").className = "step-num done";
+  mostrarStep(4);
+  mostrarStep(5);
+  atualizarResumo();
+  setTimeout(() => document.getElementById("step4").scrollIntoView({behavior:"smooth", block:"nearest"}), 100);
+}
+
+// ── Step 4 + 5: Dados & Resumo ────────────────────────────────
+function atualizarResumo() {
+  if (!S.dia || !S.slot) return;
+  const nome   = document.getElementById("input-nome").value.trim();
+  const email  = document.getElementById("input-email").value.trim();
+  const ac     = S.tipo === "consultoria" ? "c" : "m";
+  const label  = S.tipo === "consultoria" ? "Consultoria" : "Mentoria ME";
+  const dur    = S.tipo === "consultoria" ? "1 hora" : "1h30";
+  const dt     = new Date(S.ano, S.mes, S.dia);
+  const dayStr = DIAS_FULL[dt.getDay()] + ", " + S.dia + " de " + MESES[S.mes] + " de " + S.ano;
+
+  document.getElementById("resumo").innerHTML = `
+    <div class="summary-row">
+      <span class="s-key">Serviço</span>
+      <span class="s-badge s-badge-${ac}">${label}</span>
+    </div>
+    <div class="summary-row">
+      <span class="s-key">Data</span>
+      <span class="s-val">${dayStr}</span>
+    </div>
+    <div class="summary-row">
+      <span class="s-key">Horário</span>
+      <span class="s-val">${S.slot}</span>
+    </div>
+    <div class="summary-row">
+      <span class="s-key">Duração</span>
+      <span class="s-val">${dur}</span>
+    </div>
+    ${nome ? `<div class="summary-row"><span class="s-key">Cliente</span><span class="s-val">${nome}</span></div>` : ""}
+    ${email ? `<div class="summary-row"><span class="s-key">E-mail</span><span class="s-val">${email}</span></div>` : ""}
+  `;
+
+  const btn = document.getElementById("btn-confirmar");
+  btn.className = `cta cta-${ac}`;
+  btn.disabled = !nome;
+}
+
+// ── Confirmação ────────────────────────────────────────────────
+async function confirmar() {
+  if (S.loading) return;
+  const nome  = document.getElementById("input-nome").value.trim();
+  const email = document.getElementById("input-email").value.trim();
+  if (!nome) return;
+
+  S.loading = true;
+  const btn = document.getElementById("btn-confirmar");
+  const txt = document.getElementById("btn-texto");
+  btn.disabled = true;
+  txt.innerHTML = '<span class="spinner"></span>Confirmando…';
+
+  const fb = document.getElementById("feedback");
+  fb.className = "feedback"; fb.innerHTML = "";
+
+  // Se URL não configurada, simula sucesso
+  if (APPS_SCRIPT_URL === "SUA_URL_AQUI") {
+    await delay(1200);
+    S.loading = false;
+    mostrarSucesso({ titulo: `${S.tipo === "consultoria" ? "Consultoria" : "Mentoria ME"} · ${nome}` });
+    return;
+  }
+
+  try {
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify({
+        action: "agendar",
+        tipo: S.tipo,
+        data: fmtDate(new Date(S.ano, S.mes, S.dia)),
+        slot: S.slot,
+        nomeCliente: nome,
+        emailCliente: email || null
+      })
+    });
+    const data = await res.json();
+    S.loading = false;
+    if (data.ok) {
+      mostrarSucesso(data.evento);
+    } else {
+      btn.disabled = false;
+      txt.textContent = "Confirmar agendamento";
+      fb.className = "feedback err";
+      fb.innerHTML = `<strong>Erro ao agendar:</strong> ${data.erro}`;
+    }
+  } catch (e) {
+    S.loading = false;
+    btn.disabled = false;
+    txt.textContent = "Confirmar agendamento";
+    fb.className = "feedback err";
+    fb.innerHTML = "<strong>Erro de conexão.</strong> Verifique a URL do Apps Script e tente novamente.";
+  }
+}
+
+function mostrarSucesso(ev) {
+  const ac = S.tipo === "consultoria" ? "c" : "m";
+  const fb = document.getElementById("feedback");
+  fb.className = "feedback ok";
+  fb.innerHTML = `
+    <strong>✅ Agendamento confirmado!</strong><br>
+    ${ev.titulo || ""} foi adicionado ao seu Google Calendar.<br>
+    ${ev.emailCliente ? "Um convite foi enviado por e-mail." : ""}
+  `;
+  document.getElementById("btn-confirmar").style.display = "none";
+  document.getElementById("feedback").scrollIntoView({behavior:"smooth", block:"nearest"});
+}
+
+// ── Navegação de steps ─────────────────────────────────────────
+function mostrarStep(n) {
+  document.getElementById("step" + n).classList.remove("hidden");
+}
+function esconderStep(n) {
+  document.getElementById("step" + n).classList.add("hidden");
+}
+function voltarStep(n) {
+  if (n <= 1) { esconderStep(2); esconderStep(3); esconderStep(4); esconderStep(5); }
+  if (n <= 2) { esconderStep(3); esconderStep(4); esconderStep(5); S.dia = null; S.slot = null; }
+  if (n <= 3) { esconderStep(4); esconderStep(5); S.slot = null; }
+}
+
+// ── Utils ──────────────────────────────────────────────────────
+function fmtDate(d) {
+  const y  = d.getFullYear();
+  const mo = String(d.getMonth() + 1).padStart(2, "0");
+  const dy = String(d.getDate()).padStart(2, "0");
+  return `${y}-${mo}-${dy}`;
+}
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// Esconde aviso de config se URL já preenchida
+if (APPS_SCRIPT_URL !== "https://script.google.com/macros/s/AKfycbzn3T_572jvW00ic6We_sa0e1kXJQUv2U3gzI7Ont2jgJ4zI38PQMzxZGvIc42tjYSKQw/exec") {
+  document.getElementById("config-notice").style.display = "none";
+}
+</script>
+</body>
+</html>
