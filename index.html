@@ -597,18 +597,15 @@ async function confirmar() {
   }
 
   try {
-    const res = await fetch(APPS_SCRIPT_URL, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain" },
-      body: JSON.stringify({
-        action: "agendar",
-        tipo: S.tipo,
-        data: fmtDate(new Date(S.ano, S.mes, S.dia)),
-        slot: S.slot,
-        nomeCliente: nome,
-        emailCliente: email || null
-      })
+    const params = new URLSearchParams({
+      action:       "agendar",
+      tipo:         S.tipo,
+      data:         fmtDate(new Date(S.ano, S.mes, S.dia)),
+      slot:         S.slot,
+      nomeCliente:  nome,
+      emailCliente: email || ""
     });
+    const res  = await fetch(`${APPS_SCRIPT_URL}?${params.toString()}`, { method: "GET" });
     const data = await res.json();
     S.loading = false;
     if (data.ok) {
